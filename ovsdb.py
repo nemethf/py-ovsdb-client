@@ -133,6 +133,27 @@ def list_bridges(db = DEFAULT_DB):
     # TODO: cancel the monitor after we're done?
     return monitor(columns, db)
 
+daemon_uuid = None
+def get_daemon_uuid(socket, db = DEFAULT_DB):
+    "Get the uuid from table Open_vSwitch"
+    global daemon_uuid
+    if daemon_uuid:
+        return daemon_uuid
+    op = {"op": "select",
+          "table": "Open_vSwitch",
+          "where": [],
+          "columns": ["_uuid"],
+          }
+    reply = transact(socket, db, [op])
+    try:
+        if (len(reply[0]['rows']) != 1):
+            e = 'There must be exactly one record in the Open_vSwitch table.'
+            raise RuntimeError(e) 
+        daemon_uuid = reply[0]['rows'][0]['_uuid'][1]
+    except (KeyError, TypeError):
+        raise RuntimeError("Database schema changed")
+    return daemon_uuid
+
 if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((OVSDB_IP, OVSDB_PORT))
