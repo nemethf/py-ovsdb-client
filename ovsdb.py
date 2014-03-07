@@ -1,3 +1,4 @@
+import os
 import sys
 import Queue
 import socket
@@ -8,6 +9,19 @@ OVSDB_IP = '127.0.0.1'
 OVSDB_PORT = 6632
 DEFAULT_DB = 'Open_vSwitch'
 BUFFER_SIZE = 4096
+
+pid = None
+last_id = 0
+
+def generate_id():
+    global pid
+    global last_id
+    if pid is None:
+        pid = os.getpid()
+    last_id += 1
+    return "%d-%d" % (pid, last_id)
+
+# ----------------------------------------------------------------------
 
 # TODO: Could start by getting the DB name and using that for ongoing requests
 # TODO: How to keep an eye out for montor, update, echo messages?
