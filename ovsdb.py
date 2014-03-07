@@ -86,9 +86,28 @@ def list_tables(server, db):
 def list_columns(server, db):
     return
 
-def transact(server, transactions):
+def transact(s, db, operations):
     # Variants of this will add stuff
-    return
+    request = { "method": "transact",
+                "params": [db] + operations,
+                "id": generate_id(),
+              }
+
+    s.send(json.dumps(request))
+    response = gather_reply(s)
+    
+    #assumtion: no overlapping calls
+    assert( request['id'] == response['id'] )
+    results = response['result']
+    if len(operations) == len(results):
+        for i, val in enumerate(zip(operations, results)):
+            if 'error' in val[1]:
+                raise RuntimeError('Op failed (%d, %s): %s' %
+                                   (i, val[0], val[1]))
+    else:
+        raise RuntimeError('transact failed: %s' % results[-1])
+
+    return results
 
 def monitor(columns, monitor_id = None, db = DEFAULT_DB):
     msg = {"method":"monitor", "params":[db, monitor_id, columns], "id":0}
