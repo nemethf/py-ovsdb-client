@@ -28,11 +28,15 @@ def generate_id():
 def gather_reply(socket):
     print "Waiting for reply"
     result = ""
-    # we got the whole thing if we received all the fields
-    while "error" not in result or "id" not in result or "result" not in result:
+    while True:
         reply = socket.recv(BUFFER_SIZE)
         result += reply
-    return json.loads(result)
+        # we got the whole thing if we received all the fields
+        if "error" in result and "id" in result and "result" in result:
+            try:
+                return json.loads(result)
+            except ValueError:
+                pass
 
 def listen_for_messages(sock, message_queues):
     # To send something, add a message to queue and append sock to outputs
